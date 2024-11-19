@@ -30,20 +30,17 @@ def home():
 
 @app.route('/api/transactions', methods=['GET'])
 def get_transactions():
-    """Fetch transactions for a given address."""
+    address = request.args.get('address')
+    if not address:
+        return jsonify({"error": "Address is required"}), 400
+
     try:
-        address = request.args.get('address')
-        if not address:
-            return jsonify({"error": "Address is required"}), 400
-
-        # Fetch transaction data and save to Neo4j
+        # Fetch transaction data
         transactions = fetch_and_save_transactions(address)
-
-        # Return transactions as JSON response
-        return jsonify({"transactions": transactions}), 200
-
+        return jsonify({"success": True, "transactions": transactions})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Local development port
