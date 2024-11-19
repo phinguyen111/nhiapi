@@ -17,13 +17,6 @@ neo4j_driver = connect_to_neo4j(
     os.getenv("NEO4J_PASSWORD")
 )
 
-# Thêm CORS header thủ công
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return response
 
 # Định nghĩa endpoint /api/transactions
 @app.route('/api/transactions', methods=['GET'])
