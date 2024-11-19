@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS
 from database_connection import connect_to_neo4j  # Hàm kết nối tới Neo4j
 from etherscan_to_neo4j import fetch_and_save_transactions  # Hàm xử lý giao dịch từ Etherscan
 from dotenv import load_dotenv
@@ -10,14 +9,21 @@ load_dotenv()
 
 # Khởi tạo Flask app
 app = Flask(__name__)
-# Cấu hình CORS để cho phép kết nối từ Frontend
-CORS(app, resources={r"/*": {"origins": "https://6h54fix.vercel.app"}})
+
 # Kết nối với cơ sở dữ liệu Neo4j
 neo4j_driver = connect_to_neo4j(
     os.getenv("NEO4J_URI"), 
     os.getenv("NEO4J_USER"), 
     os.getenv("NEO4J_PASSWORD")
 )
+
+# Thêm CORS header thủ công
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
 
 # Định nghĩa endpoint /api/transactions
 @app.route('/api/transactions', methods=['GET'])
