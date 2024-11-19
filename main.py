@@ -12,7 +12,6 @@ load_dotenv()
 app = Flask(__name__)
 # Cấu hình CORS để cho phép kết nối từ Frontend
 CORS(app, resources={r"/*": {"origins": "https://6h54fix.vercel.app"}})
-
 # Kết nối với cơ sở dữ liệu Neo4j
 neo4j_driver = connect_to_neo4j(
     os.getenv("NEO4J_URI"), 
