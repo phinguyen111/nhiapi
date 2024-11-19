@@ -10,7 +10,7 @@ load_dotenv()
 
 # Flask app initialization
 app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing for frontend integration
+CORS(app, resources={r"/*": {"origins": ["https://6h54fix.vercel.app"]}})
 
 # Setup Neo4j connection using environment variables
 NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://aadff3f9.databases.neo4j.io")
