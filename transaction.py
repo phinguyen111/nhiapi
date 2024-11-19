@@ -6,6 +6,13 @@ import requests
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/api/transactions")
+async def get_transactions():
+    return {"message": "Transactions API is working!"}
 
 def handler(request):
     address = request.args.get('address')
