@@ -10,7 +10,7 @@ load_dotenv()
 
 # Flask app initialization
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://6h54fix.vercel.app"]}})
+CORS(app) 
 
 # Setup Neo4j connection using environment variables
 NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://aadff3f9.databases.neo4j.io")
