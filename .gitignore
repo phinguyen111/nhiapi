@@ -11,6 +11,4 @@ venv/
 __pycache__/
 *.py[cod]
 
-# Bỏ qua file của hệ điều hành (Windows, macOS)
-.DS_Store
-Thumbs.db
+
