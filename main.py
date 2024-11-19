@@ -41,6 +41,13 @@ def get_transactions():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+@app.after_request
+def after_request(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Local development port
+    
