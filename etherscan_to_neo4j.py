@@ -1,6 +1,5 @@
 from database_connection import Neo4jConnection
 import requests
-import time
 
 uri = "neo4j+s://aadff3f9.databases.neo4j.io"
 username = "neo4j"
@@ -17,14 +16,14 @@ def fetch_and_save_transactions(address, limit=100):
         data = response.json()
 
         if data["status"] == "1" and len(data["result"]) > 0:
-            transactions = data["result"][:limit]  # Lấy limit giao dịch gần nhất
+            transactions = data["result"][:limit]  # Fetch limit transactions
             
             for tx in transactions:
                 if int(tx['value']) > 0:
-                    # Chuyển đổi giá trị từ wei sang ether
+                    # Convert wei to ether
                     amount_in_ether = float(int(tx['value']) / (10 ** 18))
                     
-                    # Lưu vào Neo4j
+                    # Save to Neo4j
                     query = f"""
                     MERGE (s:Address {{address: '{tx['from']}'}})
                     MERGE (r:Address {{address: '{tx['to']}'}})
@@ -37,14 +36,10 @@ def fetch_and_save_transactions(address, limit=100):
                     MERGE (t)-[:RECEIVED_FROM {{amount: {amount_in_ether}, timestamp: {tx['timeStamp']}}}]->(r)
                     """
                     neo4j_connection.execute_query(query)
-                    
-                    # Add amount_in_ether to transaction data
-                    tx['amount'] = amount_in_ether
 
             return transactions
         else:
             return []
-            
     except Exception as e:
         print(f"Error fetching transactions: {e}")
         return []
