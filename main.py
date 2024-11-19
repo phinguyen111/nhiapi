@@ -1,53 +1,44 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from database_connection import connect_to_neo4j  # Import your database connection function
-from etherscan_to_neo4j import fetch_and_save_transactions  # Import for interacting with Etherscan API
+from database_connection import connect_to_neo4j  # Hàm kết nối tới Neo4j
+from etherscan_to_neo4j import fetch_and_save_transactions  # Hàm xử lý giao dịch từ Etherscan
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
+# Load các biến môi trường từ .env
 load_dotenv()
 
-# Flask app initialization
+# Khởi tạo Flask app
 app = Flask(__name__)
-CORS(app) 
+# Cấu hình CORS để cho phép kết nối từ Frontend
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Setup Neo4j connection using environment variables
-NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://aadff3f9.databases.neo4j.io")
-NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
+# Kết nối với cơ sở dữ liệu Neo4j
+neo4j_driver = connect_to_neo4j(
+    os.getenv("NEO4J_URI"), 
+    os.getenv("NEO4J_USER"), 
+    os.getenv("NEO4J_PASSWORD")
+)
 
-try:
-    neo4j_driver = connect_to_neo4j(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
-    print("Connected to Neo4j successfully!")
-except Exception as e:
-    print(f"Failed to connect to Neo4j: {e}")
-
-@app.route('/', methods=['GET'])
-def home():
-    """Root route to verify API is running."""
-    return jsonify({"message": "API is running!"})
-
+# Định nghĩa endpoint /api/transactions
 @app.route('/api/transactions', methods=['GET'])
 def get_transactions():
+    # Lấy tham số "address" từ URL
     address = request.args.get('address')
     if not address:
+        # Nếu không có địa chỉ, trả về lỗi
         return jsonify({"error": "Address is required"}), 400
 
     try:
-        # Fetch transaction data
+        # Gọi hàm fetch_and_save_transactions để lấy dữ liệu giao dịch
         transactions = fetch_and_save_transactions(address)
+
+        # Trả về dữ liệu giao dịch dưới dạng JSON
         return jsonify({"success": True, "transactions": transactions})
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
-@app.after_request
-def after_request(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-    return response
+        # Xử lý lỗi nếu xảy ra
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)  # Local development port
-    
+    # Chạy server Flask trên localhost
+    app.run(debug=True, port=5001)
