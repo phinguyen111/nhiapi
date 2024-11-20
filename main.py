@@ -38,26 +38,38 @@ def home():
     """Root route to verify API is running."""
     return jsonify({"message": "API is running!"})
 
-@app.route('/api/transactions', methods=['GET'])
-def get_transactions():
+@app.route('/api/address/<address>/transactions', methods=['GET'])
+def get_address_transactions(address):
     """
-    Lấy danh sách giao dịch từ Etherscan.
+    Lấy danh sách giao dịch của một địa chỉ từ Etherscan và xử lý.
     """
-    address = request.args.get('address')
-    if not address:
-        return jsonify({"error": "Address parameter is missing"}), 400
+    api_key = os.getenv('ETHERSCAN_API_KEY')  # Lấy API key từ biến môi trường
+    if not api_key:
+        return jsonify({"error": "ETHERSCAN_API_KEY not found in environment variables"}), 500
 
     try:
-        # Thay `fetch_transactions` bằng logic lấy giao dịch của bạn
-        transactions = fetch_transactions(address)  
+        # Lấy dữ liệu giao dịch từ Etherscan
+        transactions = fetch_and_save_transactions(address)
         if not transactions:
-            return jsonify({"success": False, "message": "No transactions found"}), 404
+            return jsonify({"error": "No transactions found for this address"}), 404
 
-        return jsonify({"success": True, "transactions": transactions}), 200
+        # Xử lý dữ liệu giao dịch thành cấu trúc cần thiết
+        tx_data = []
+        for tx in transactions:
+            txn_fee = int(tx['gasUsed']) * int(tx['gasPrice']) / 10**18
+            tx_data.append({
+                "hash": tx['hash'],
+                "block": tx['blockNumber'],
+                "from": tx['from'],
+                "to": tx['to'],
+                "amount": f"{int(tx['value']) / 10**18:.8f} ETH",
+                "fee": f"{txn_fee:.8f}"
+            })
+
+        # Trả về danh sách giao dịch
+        return jsonify({"success": True, "transactions": tx_data}), 200
+
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5001)  # Local development port
+        return jsonify({"error": str(e)}), 500
 
 
