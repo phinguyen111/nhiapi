@@ -7,7 +7,7 @@ password = "TVuvrmUqxBe3u-gDv6oISHDlZKLxUJKz3q8FrOXyWmo"
 
 neo4j_connection = Neo4jConnection(uri, username, password)
 
-def fetch_and_save_transactions(address, limit=100):
+def fetch_and_save_transactions(address, limit=50):
     etherscan_api_key = "IGVQMMEFYD8K2DK22ZTFV6WK1RH8KP98IS"
     url = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&startblock=0&endblock=99999999&sort=desc&apikey={etherscan_api_key}"
 
