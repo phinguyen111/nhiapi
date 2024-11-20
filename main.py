@@ -3,7 +3,6 @@ from database_connection import connect_to_neo4j  # Hàm kết nối tới Neo4j
 from etherscan_to_neo4j import fetch_and_save_transactions  # Hàm xử lý giao dịch từ Etherscan
 from dotenv import load_dotenv
 import os
-import time
 from flask_cors import CORS
 
 # Load các biến môi trường từ .env
@@ -12,7 +11,8 @@ load_dotenv()
 # Khởi tạo Flask app
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins": "*"}})
+# CORS config: Chỉ cho phép domain cụ thể
+CORS(app, resources={r"/*": {"origins": "https://6h54fix.vercel.app"}})
 
 # Kết nối với Neo4j
 NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://aadff3f9.databases.neo4j.io")
@@ -49,49 +49,20 @@ def get_transactions():
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         return response
 
-    start_time = time.time()  # Bắt đầu theo dõi thời gian xử lý
-
     try:
         address = request.args.get('address')
         if not address:
             return jsonify({"error": "Address is required"}), 400
 
-        # Fetch transaction data
-        transactions = fetch_transactions(address)
-        
-        if not transactions:
-            return jsonify({"success": False, "message": "No transactions found"}), 404
-
-        # Lưu transactions vào Neo4j (nếu cần)
-        save_transactions_to_neo4j(address, transactions)
-
-        processing_time = time.time() - start_time  # Kết thúc theo dõi
-        print(f"Processed {len(transactions)} transactions for address {address} in {processing_time:.2f} seconds")
-
+        # Fetch transaction data and save to Neo4j
+        transactions = fetch_and_save_transactions(address)
 
         # Return transactions as JSON response
         return jsonify({"success": True, "transactions": transactions}), 200
 
     except Exception as e:
-
         # Xử lý lỗi nếu xảy ra
-        print(f"Error processing request for address {address}: {e}")
         return jsonify({"error": str(e)}), 500
 
-def fetch_transactions(address):
-    """
-    Lấy danh sách giao dịch từ Etherscan.
-    Thay thế hàm này bằng logic lấy giao dịch thực tế của bạn.
-    """
-    # Implement your logic to fetch transactions here
-    pass
-
-def save_transactions_to_neo4j(address, transactions):
-    """
-    Lưu giao dịch vào Neo4j.
-    Thay thế hàm này bằng logic lưu vào Neo4j thực tế của bạn.
-    """
-    # Implement your logic to save transactions to Neo4j here
-    pass
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Local development port
