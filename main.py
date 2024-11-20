@@ -42,14 +42,13 @@ def home():
 def get_transactions():
     """Fetch transactions for a given address."""
     if request.method == 'OPTIONS':
-        # Phản hồi preflight request
+        # Preflight request handling
         response = make_response(jsonify({"message": "Preflight request successful"}))
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         return response
-    start_time = time.time()  # Bắt đầu theo dõi thời gian xử lý
-
+    
     try:
         address = request.args.get('address')
         if not address:
@@ -57,14 +56,24 @@ def get_transactions():
 
         # Fetch transaction data and save to Neo4j
         transactions = fetch_and_save_transactions(address)
-        processing_time = time.time() - start_time  # Kết thúc theo dõi
-        print(f"Processed {len(transactions)} transactions for address {address} in {processing_time:.2f} seconds")
+        if not transactions:
+            return jsonify({"success": False, "message": "No transactions found"}), 404
 
-        # Return transactions as JSON response
-        return jsonify({"success": True, "transactions": transactions}), 200
+        # Format transactions for frontend
+        formatted_transactions = []
+        for tx in transactions:
+            formatted_transactions.append({
+                "from": tx['from'],
+                "to": tx['to'],
+                "amount": float(tx['value']) / 10**18,  # Convert Wei to Ether
+                "timestamp": int(tx['timeStamp']),
+                "hash": tx.get('hash'),
+                "block": tx.get('blockNumber'),
+                "fee": tx.get('gasUsed')  # Fee in gas units
+            })
 
+        return jsonify({"success": True, "transactions": formatted_transactions}), 200
     except Exception as e:
-        # Xử lý lỗi nếu xảy ra
         print(f"Error processing request for address {address}: {e}")
         return jsonify({"error": str(e)}), 500
 
