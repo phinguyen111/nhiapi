@@ -11,8 +11,7 @@ load_dotenv()
 # Khởi tạo Flask app
 app = Flask(__name__)
 
-# CORS config: Chỉ cho phép domain cụ thể
-CORS(app, resources={r"/*": {"origins": "https://6h54fix.vercel.app"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Kết nối với Neo4j
 NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://aadff3f9.databases.neo4j.io")
@@ -28,10 +27,11 @@ except Exception as e:
 # Middleware thêm tiêu đề CORS
 @app.after_request
 def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = "https://6h54fix.vercel.app"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
+
 
 @app.route('/', methods=['GET'])
 def home():
