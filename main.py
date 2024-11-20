@@ -68,11 +68,15 @@ def get_transactions():
         processing_time = time.time() - start_time  # Kết thúc theo dõi
         print(f"Processed {len(transactions)} transactions for address {address} in {processing_time:.2f} seconds")
 
+
         # Return transactions as JSON response
         return jsonify({"success": True, "transactions": transactions}), 200
 
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+
+        # Xử lý lỗi nếu xảy ra
+        print(f"Error processing request for address {address}: {e}")
+        return jsonify({"error": str(e)}), 500
 
 def fetch_transactions(address):
     """
