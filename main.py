@@ -40,29 +40,24 @@ def home():
 
 @app.route('/api/transactions', methods=['GET', 'OPTIONS'])
 def get_transactions():
-    """Fetch transactions for a given address."""
-    if request.method == 'OPTIONS':
-        # Phản hồi preflight request
-        response = make_response(jsonify({"message": "Preflight request successful"}))
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        return response
+    """
+    Lấy danh sách giao dịch từ Etherscan.
+    """
+    address = request.args.get('address')
+    if not address:
+        return jsonify({"error": "Address parameter is missing"}), 400
 
     try:
-        address = request.args.get('address')
-        if not address:
-            return jsonify({"error": "Address is required"}), 400
+        # Thay `fetch_transactions` bằng logic lấy giao dịch của bạn
+        transactions = fetch_transactions(address)  
+        if not transactions:
+            return jsonify({"success": False, "message": "No transactions found"}), 404
 
-        # Fetch transaction data and save to Neo4j
-        transactions = fetch_and_save_transactions(address)
-
-        # Return transactions as JSON response
         return jsonify({"success": True, "transactions": transactions}), 200
-
     except Exception as e:
-        # Xử lý lỗi nếu xảy ra
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Local development port
+
+
