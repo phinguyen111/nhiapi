@@ -3,6 +3,7 @@ from database_connection import connect_to_neo4j  # Hàm kết nối tới Neo4j
 from etherscan_to_neo4j import fetch_and_save_transactions  # Hàm xử lý giao dịch từ Etherscan
 from dotenv import load_dotenv
 import os
+import time
 from flask_cors import CORS
 
 # Load các biến môi trường từ .env
@@ -27,11 +28,10 @@ except Exception as e:
 # Middleware thêm tiêu đề CORS
 @app.after_request
 def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "https://6h54fix.vercel.app"
+    response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
-
 
 @app.route('/', methods=['GET'])
 def home():
@@ -48,6 +48,7 @@ def get_transactions():
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         return response
+    start_time = time.time()  # Bắt đầu theo dõi thời gian xử lý
 
     try:
         address = request.args.get('address')
@@ -56,12 +57,15 @@ def get_transactions():
 
         # Fetch transaction data and save to Neo4j
         transactions = fetch_and_save_transactions(address)
+        processing_time = time.time() - start_time  # Kết thúc theo dõi
+        print(f"Processed {len(transactions)} transactions for address {address} in {processing_time:.2f} seconds")
 
         # Return transactions as JSON response
         return jsonify({"success": True, "transactions": transactions}), 200
 
     except Exception as e:
         # Xử lý lỗi nếu xảy ra
+        print(f"Error processing request for address {address}: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

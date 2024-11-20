@@ -1,5 +1,5 @@
 from neo4j import GraphDatabase
-
+import time
 class Neo4jConnection:
     def __init__(self, uri, user, password):
         """
@@ -23,8 +23,11 @@ class Neo4jConnection:
         :param parameters: Optional parameters for the query.
         :return: Query results.
         """
+        start_time = time.time()  # Bắt đầu theo dõi thời gian
         with self._driver.session() as session:
             result = session.run(query, parameters or {})
+            processing_time = time.time() - start_time  # Kết thúc theo dõi
+            print(f"Query executed in {processing_time:.2f} seconds")
             return [record.data() for record in result]
 
     def create_address_node(self, address):
