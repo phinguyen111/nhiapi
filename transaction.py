@@ -14,19 +14,20 @@ router = APIRouter()
 async def get_transactions():
     return {"message": "Transactions API is working!"}
 
+def handler(request):
+    address = request.args.get('address')
+    if not address:
+        return jsonify({'success': False, 'message': 'Address parameter is missing'}), 400
+
+    try:
+        transactions = fetch_and_save_transactions(address)
+        return jsonify({'success': True, 'transactions': transactions})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
-
-# Updated CORS configuration
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["https://6h54fix.vercel.app"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
-    }
-})
+CORS(app)  # Enable CORS for all routes
 
 ETHERSCAN_API_KEY = os.getenv('ETHERSCAN_API_KEY')
 ETHERSCAN_API_URL = os.getenv('ETHERSCAN_API_URL')
@@ -37,18 +38,8 @@ NEO4J_PASSWORD = os.getenv('NEO4J_PASSWORD')
 BSCSCAN_API_URL = 'https://api.bscscan.com/api'
 BSCSCAN_API_KEY = os.getenv('BSCSCAN_API_KEY')
 
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', 'https://6h54fix.vercel.app')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
-
-@app.route('/api/transactions', methods=['OPTIONS'])
-def handle_options():
-    response = app.make_default_options_response()
-    return response
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 @app.route('/api/transactions', methods=['GET'])
 def get_transactions():
@@ -57,35 +48,36 @@ def get_transactions():
         return jsonify({'success': False, 'message': 'Address parameter is missing'}), 400
     
     try:
-        # Fetch and save transactions
+        # Gọi hàm để lấy và lưu transactions
         transactions = fetch_and_save_transactions(address)
         
-        # Format transactions according to frontend needs
+        # Format transactions theo cấu trúc mà frontend cần
         formatted_transactions = []
         for tx in transactions:
             if float(tx.get('amount', 0)) > 0:
                 formatted_tx = {
                     'from': tx['from'],
                     'to': tx['to'],
-                    'amount': float(tx['amount']),
-                    'timestamp': int(tx['timeStamp']),
+                    'amount': float(tx['amount']),  # Chuyển sang float
+                    'timestamp': int(tx['timeStamp']),  # Chuyển sang integer
                     'hash': tx.get('hash'),
                     'block': tx.get('blockNumber'),
                     'fee': tx.get('gasUsed', '0.000000')
                 }
                 formatted_transactions.append(formatted_tx)
         
-        response = jsonify({
+
+        return jsonify({
             'success': True,
             'transactions': formatted_transactions
         })
-        return response
-
     except Exception as e:
         return jsonify({
             'success': False,
             'message': str(e)
         }), 500
+    
+
 
 def fetch_json(url, params):
     response = requests.get(url, params=params)
