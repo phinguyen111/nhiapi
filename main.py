@@ -38,7 +38,7 @@ def home():
     """Root route to verify API is running."""
     return jsonify({"message": "API is running!"})
 
-@app.route('/api/transactions', methods=['GET', 'OPTIONS'])
+@app.route('/api/transactions', methods=['GET'])
 def get_transactions():
     """
     Lấy danh sách giao dịch từ Etherscan.
